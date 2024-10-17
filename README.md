@@ -32,7 +32,7 @@ Execute a aplicação usando o seguinte comando:
 bash
 Copiar código
 python app.py
-Abra um navegador e acesse http://127.0.0.1:8050/ para visualizar o dashboard.
+Abra um navegador e acesse #http://127.0.0.1:8050/ para visualizar o dashboard.
 Uso
 Selecione marcas nos menus suspensos para filtrar as visualizações.
 Explore os diferentes gráficos para obter insights sobre o desempenho dos produtos.
