@@ -3,11 +3,11 @@ import plotly.express as px
 import plotly.graph_objects as go
 from dash import Dash, dcc, html, Input, Output
 
+
 # Função para carregar os dados de um arquivo CSV
 def carregar_dados(caminho):
     """Carrega os dados de um arquivo CSV e retorna um DataFrame."""
     try:
-        # Lê o CSV e exibe as primeiras linhas, informações e estatísticas
         df = pd.read_csv(caminho)
         print(df.head())
         print(df.info())
@@ -20,10 +20,10 @@ def carregar_dados(caminho):
         print(f"Erro ao carregar os dados: {e}")
         return pd.DataFrame()  # Retorna um DataFrame vazio em caso de erro
 
+
 # Função para criar gráficos a partir do DataFrame
 def cria_graficos(df):
     """Cria gráficos a partir do DataFrame fornecido e retorna uma lista de figuras e marcas populares."""
-    # Filtra as 15 marcas mais populares
     top_brands = df['Marca'].value_counts().nlargest(15).index
     df_filtered = df[df['Marca'].isin(top_brands)]  # Filtra o DataFrame para as top marcas
 
@@ -34,11 +34,19 @@ def cria_graficos(df):
     fig4 = px.line(df_filtered, x='Desconto', y='Nota', color='Marca', title='Nota por Desconto')
     fig5 = px.bar(df_filtered, x='Título', y='N_Avaliações', title='Quantidade de Avaliações por Marca')
 
-    # Ajusta o layout dos gráficos
-    fig2.update_layout(height=600, width=900)
-    fig5.update_layout(height=800, width=1200)
+    # Gráfico de barras por material e gênero
+    fig_material_genero = px.bar(df_filtered,
+                                 x='Material',
+                                 color='Gênero',
+                                 title='Quantidade de Produtos por Material e Gênero',
+                                 barmode='group')
 
-    return fig1, fig2, fig3, fig4, fig5, top_brands  # Retorna as figuras e marcas populares
+    # Ajusta o layout dos gráficos
+    for fig in [fig1, fig2, fig3, fig4, fig5, fig_material_genero]:
+        fig.update_layout(height=600, width=1455)
+
+    return fig1, fig2, fig3, fig4, fig5, fig_material_genero, top_brands  # Retorna as figuras e marcas populares
+
 
 # Função para criar um gráfico 3D
 def cria_grafico_3d(filtered_df):
@@ -58,7 +66,6 @@ def cria_grafico_3d(filtered_df):
         text=filtered_df['Título']
     )])
 
-    # Configura os eixos do gráfico 3D
     fig_3d.update_layout(title='Gráfico 3D: Preço vs. Nota vs. Desconto',
                          scene=dict(
                              xaxis_title='Preço',
@@ -67,21 +74,19 @@ def cria_grafico_3d(filtered_df):
                          ))
     return fig_3d
 
+
 # Função para criar e configurar a aplicação Dash
 def cria_app(df):
     """Cria e configura a aplicação Dash."""
-    app = Dash(__name__)  # Inicializa a aplicação
+    app = Dash(__name__)
 
-    # Cria os gráficos iniciais
-    fig1, fig2, fig3, fig4, fig5, top_brands = cria_graficos(df)
+    fig1, fig2, fig3, fig4, fig5, fig_material_genero, top_brands = cria_graficos(df)
 
-    # Define o layout da aplicação
     app.layout = html.Div(style={'backgroundColor': '#f0f0f0', 'padding': '20px'}, children=[
         html.H1("Análise de Produtos E-commerce", style={'textAlign': 'center', 'color': '#333'}),
 
         # Sliders para filtrar dados
         html.Div(className='row', children=[
-            # Slider para faixa de preço
             html.Div(className='four columns', children=[
                 html.Label("Faixa de Preço"),
                 dcc.RangeSlider(
@@ -95,7 +100,6 @@ def cria_app(df):
                 ),
                 html.Div(id='preco-output', style={'textAlign': 'center'})
             ]),
-            # Slider para faixa de nota
             html.Div(className='four columns', children=[
                 html.Label("Faixa de Nota"),
                 dcc.RangeSlider(
@@ -109,7 +113,6 @@ def cria_app(df):
                 ),
                 html.Div(id='nota-output', style={'textAlign': 'center'})
             ]),
-            # Slider para faixa de desconto
             html.Div(className='four columns', children=[
                 html.Label("Faixa de Desconto"),
                 dcc.RangeSlider(
@@ -191,6 +194,13 @@ def cria_app(df):
                 dcc.Graph(id='3d-scatter'),
             ]),
         ]),
+
+        # Gráfico de barras por material e gênero
+        html.Div(className='row', children=[
+            html.Div(className='twelve columns', children=[
+                dcc.Graph(figure=fig_material_genero)
+            ])
+        ]),
     ])
 
     # Define os callbacks para atualizar os gráficos e os valores dos sliders
@@ -213,14 +223,15 @@ def cria_app(df):
          Input('genero-dropdown', 'value'),
          Input('material-dropdown', 'value')]
     )
-    def update_graphs(scatter_brand, line_brand, bar_brand, histogram_brand, preco_range, nota_range, desconto_range, generos_selecionados, materiais_selecionados):
+    def update_graphs(scatter_brand, line_brand, bar_brand, histogram_brand, preco_range, nota_range, desconto_range,
+                      generos_selecionados, materiais_selecionados):
         # Filtra os dados com base na marca selecionada e nos sliders
         filtered_df = df[
             (df['Marca'] == scatter_brand) &
             (df['Preço'] >= preco_range[0]) & (df['Preço'] <= preco_range[1]) &
             (df['Nota'] >= nota_range[0]) & (df['Nota'] <= nota_range[1]) &
             (df['Desconto'] >= desconto_range[0]) & (df['Desconto'] <= desconto_range[1])
-        ]
+            ]
 
         # Aplica filtros de gênero e material
         if generos_selecionados:
@@ -234,13 +245,13 @@ def cria_app(df):
             (df['Preço'] >= preco_range[0]) & (df['Preço'] <= preco_range[1]) &
             (df['Nota'] >= nota_range[0]) & (df['Nota'] <= nota_range[1]) &
             (df['Desconto'] >= desconto_range[0]) & (df['Desconto'] <= desconto_range[1])
-        ]
+            ]
 
         # Aplica filtros de gênero e material ao histograma
         filtered_histogram = filtered_histogram[
             (filtered_histogram['Gênero'].isin(generos_selecionados)) &
             (filtered_histogram['Material'].isin(materiais_selecionados))
-        ] if generos_selecionados and materiais_selecionados else filtered_histogram
+            ] if generos_selecionados and materiais_selecionados else filtered_histogram
 
         # Filtra o DataFrame para o gráfico de linha
         filtered_line = df[df['Marca'] == line_brand]
@@ -263,6 +274,7 @@ def cria_app(df):
         return scatter_fig, line_fig, bar_fig, fig_3d, histogram_fig, preco_label, nota_label, desconto_label
 
     return app  # Retorna a aplicação Dash
+
 
 # Carrega os dados e cria a instância do aplicativo
 caminho_dados = 'C:/Users/diogo/Downloads/ecommerce_estatistica.csv'
