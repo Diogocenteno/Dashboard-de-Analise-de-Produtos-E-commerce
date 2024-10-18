@@ -3,27 +3,30 @@ import plotly.express as px
 import plotly.graph_objects as go
 from dash import Dash, dcc, html, Input, Output
 
-
 # Função para carregar os dados de um arquivo CSV
 def carregar_dados(caminho):
     """Carrega os dados de um arquivo CSV e retorna um DataFrame."""
     try:
         df = pd.read_csv(caminho)
-        print(df.head())
+        print(df.head())  # Mostra as primeiras linhas do DataFrame
+        print(df.columns)  # Mostra os nomes das colunas
         print(df.info())
         print(df.describe())
         pd.set_option('display.max_columns', None)  # Exibe todas as colunas
-        print(df)
         print(df.isnull().sum())  # Verifica valores ausentes
         return df
     except Exception as e:
         print(f"Erro ao carregar os dados: {e}")
         return pd.DataFrame()  # Retorna um DataFrame vazio em caso de erro
 
-
 # Função para criar gráficos a partir do DataFrame
 def cria_graficos(df):
     """Cria gráficos a partir do DataFrame fornecido e retorna uma lista de figuras e marcas populares."""
+
+    # Verifica se a coluna 'Marca' existe
+    if 'Marca' not in df.columns:
+        raise KeyError("A coluna 'Marca' não foi encontrada no DataFrame.")
+
     top_brands = df['Marca'].value_counts().nlargest(15).index
     df_filtered = df[df['Marca'].isin(top_brands)]  # Filtra o DataFrame para as top marcas
 
@@ -35,17 +38,11 @@ def cria_graficos(df):
     fig5 = px.bar(df_filtered, x='Título', y='N_Avaliações', title='Quantidade de Avaliações por Marca')
 
     # Gráfico de barras por material e gênero
-    fig_material_genero = px.bar(df_filtered,
-                                 x='Material',
-                                 color='Gênero',
-                                 title='Quantidade de Produtos por Material e Gênero',
-                                 barmode='group')
+    fig_material_genero = px.bar(df_filtered, x='Material', color='Gênero',
+                                 title='Quantidade de Produtos por Material e Gênero', barmode='group')
 
     # Gráfico de preços por material
-    fig_preco_material = px.box(df_filtered,
-                                x='Material',
-                                y='Preço',
-                                title='Distribuição de Preços por Material',
+    fig_preco_material = px.box(df_filtered, x='Material', y='Preço', title='Distribuição de Preços por Material',
                                 points="all")  # Adiciona todos os pontos
 
     # Ajusta o layout dos gráficos
@@ -53,7 +50,6 @@ def cria_graficos(df):
         fig.update_layout(height=600, width=1455)
 
     return fig1, fig2, fig3, fig4, fig5, fig_material_genero, fig_preco_material, top_brands  # Retorna as figuras e marcas populares
-
 
 # Função para criar um gráfico 3D
 def cria_grafico_3d(filtered_df):
@@ -80,7 +76,6 @@ def cria_grafico_3d(filtered_df):
                              zaxis_title='Desconto'
                          ))
     return fig_3d
-
 
 # Função para criar e configurar a aplicação Dash
 def cria_app(df):
@@ -284,7 +279,6 @@ def cria_app(df):
         return scatter_fig, line_fig, bar_fig, fig_3d, histogram_fig, preco_label, nota_label, desconto_label
 
     return app  # Retorna a aplicação Dash
-
 
 # Carrega os dados e cria a instância do aplicativo
 caminho_dados = 'C:/Users/diogo/Downloads/ecommerce_estatistica.csv'
