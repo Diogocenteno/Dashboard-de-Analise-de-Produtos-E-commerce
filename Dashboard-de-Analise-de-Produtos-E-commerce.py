@@ -41,11 +41,18 @@ def cria_graficos(df):
                                  title='Quantidade de Produtos por Material e Gênero',
                                  barmode='group')
 
+    # Gráfico de preços por material
+    fig_preco_material = px.box(df_filtered,
+                                x='Material',
+                                y='Preço',
+                                title='Distribuição de Preços por Material',
+                                points="all")  # Adiciona todos os pontos
+
     # Ajusta o layout dos gráficos
-    for fig in [fig1, fig2, fig3, fig4, fig5, fig_material_genero]:
+    for fig in [fig1, fig2, fig3, fig4, fig5, fig_material_genero, fig_preco_material]:
         fig.update_layout(height=600, width=1455)
 
-    return fig1, fig2, fig3, fig4, fig5, fig_material_genero, top_brands  # Retorna as figuras e marcas populares
+    return fig1, fig2, fig3, fig4, fig5, fig_material_genero, fig_preco_material, top_brands  # Retorna as figuras e marcas populares
 
 
 # Função para criar um gráfico 3D
@@ -80,7 +87,7 @@ def cria_app(df):
     """Cria e configura a aplicação Dash."""
     app = Dash(__name__)
 
-    fig1, fig2, fig3, fig4, fig5, fig_material_genero, top_brands = cria_graficos(df)
+    fig1, fig2, fig3, fig4, fig5, fig_material_genero, fig_preco_material, top_brands = cria_graficos(df)
 
     app.layout = html.Div(style={'backgroundColor': '#f0f0f0', 'padding': '20px'}, children=[
         html.H1("Análise de Produtos E-commerce", style={'textAlign': 'center', 'color': '#333'}),
@@ -195,15 +202,18 @@ def cria_app(df):
             ]),
         ]),
 
-        # Gráfico de barras por material e gênero
+        # Gráficos de barras por material e gênero e preços por material
         html.Div(className='row', children=[
-            html.Div(className='twelve columns', children=[
-                dcc.Graph(figure=fig_material_genero)
-            ])
+            html.Div(className='six columns', children=[
+                dcc.Graph(figure=fig_material_genero),
+            ]),
+            html.Div(className='six columns', children=[
+                dcc.Graph(figure=fig_preco_material),
+            ]),
         ]),
     ])
 
-    # Define os callbacks para atualizar os gráficos e os valores dos sliders
+    # Callbacks para atualizar os gráficos conforme os filtros
     @app.callback(
         [Output('scatter-plot', 'figure'),
          Output('line-chart', 'figure'),
