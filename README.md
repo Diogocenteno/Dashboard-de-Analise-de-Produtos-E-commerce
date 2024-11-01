@@ -44,6 +44,6 @@ Licença
 Este projeto está licenciado sob a MIT License - veja o arquivo LICENSE para mais detalhes.
 
 Contato
-Para dúvidas ou sugestões, entre em contato: diogo@example.com.
+Para dúvidas ou sugestões, entre em contato: diogocenteno1979@gmail.com.
 
 Divirta-se explorando os dados!
